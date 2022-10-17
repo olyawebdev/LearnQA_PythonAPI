@@ -1,41 +1,3 @@
-'''
-У нас есть метод, который удаляет пользователя по ID - DELETE-метод https://playground.learnqa.ru/api/user/{id}
-
-
-Само собой, удалить можно только того пользователя, из-под которого вы авторизованы.
-
-
-Необходимо в директории tests/ создать новый файл test_user_delete.py с классом TestUserDelete.
-
-
-Там написать следующие тесты.
-
-
-Первый - на попытку удалить пользователя по ID 2. Его данные для авторизации:
-
-
-        data = {
-
-            'email': 'vinkotov@example.com',
-
-            'password': '1234'
-
-        }
-
-
-
-Убедиться, что система не даст вам удалить этого пользователя.
-
-
-
-Второй - позитивный. Создать пользователя, авторизоваться из-под него, удалить, затем попробовать получить его данные по ID и убедиться, что пользователь действительно удален.
-
-
-Третий - негативный, попробовать удалить пользователя, будучи авторизованными другим пользователем.
-
-==========================================
-'''
-
 from lib.my_requests import MyRequests
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
@@ -80,29 +42,59 @@ class TestUserDelete(BaseCase):
         email, password, user_id = self.register_new_user()
         auth_sid, token = self.login(email, password)
 
+        #DELETE
+        response1 = MyRequests.delete(
+            url=self.URI_user+str(user_id),
+            headers={"x-csrf-token": token},
+            cookies={"auth_sid": auth_sid}
+        )
+        Assertions.assert_code_status(response1, 200)
+
         #GET
-        response1 = MyRequests.get(
+        response2 = MyRequests.get(
             self.URI_user + str(user_id),
             headers={"x-csrf-token": token},
             cookies={"auth_sid": auth_sid}
         )
-        Assertions.assert_json_has_keys(response1, ["username", "email", "firstName", "lastName"])
+        Assertions.assert_code_status(response2, 404)
+
+    def test_delete_user_2(self):
+        data = {
+            'email': 'vinkotov@example.com',
+            'password': '1234'
+        }
+        auth_sid, token = self.login(data["email"], data["password"])
+        response = MyRequests.delete(
+            url=self.URI_user+str(2),
+            headers={"x-csrf-token": token},
+            cookies={"auth_sid": auth_sid}
+        )
+        Assertions.assert_code_status(response, 400)
+        assert response.text == "Please, do not delete test users with ID 1, 2, 3, 4 or 5."
+
+    def test_delete_another_user(self):
+        email, password, user_id = self.register_new_user()
+        auth_sid, token = self.login(email, password)
+
+        another_user_id = 45183
 
         #DELETE
-        data = {
-            "password": password,
-            "username": self.get_json_value(response1, "username"),
-            "firstName": self.get_json_value(response1, "firstName"),
-            "lastName": self.get_json_value(response1, "lastName"),
-            "email": self.get_json_value(response1, "email")
-        }
-        response2 = MyRequests.delete(
-            url=self.URI_user+str(user_id),
+        response1 = MyRequests.delete(
+            url=self.URI_user+str(another_user_id),
             headers={"x-csrf-token": token},
-            cookies={"auth_sid": auth_sid},
-            data=data
+            cookies={"auth_sid": auth_sid}
+        )
+        #Здесь получили 200, но следующий GET запрос показывает, что пользователь не удалён
+
+        #GET
+        response2 = MyRequests.get(
+            self.URI_user + str(another_user_id),
+            headers={"x-csrf-token": token},
+            cookies={"auth_sid": auth_sid}
         )
         Assertions.assert_code_status(response2, 200)
+        Assertions.assert_json_has_key(response2, "username")
+
 
 
 
