@@ -1,7 +1,9 @@
+import allure
 from lib.my_requests import MyRequests
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 
+@allure.epic("Delete user cases")
 class TestUserDelete(BaseCase):
 
     def setup(self):
@@ -38,6 +40,8 @@ class TestUserDelete(BaseCase):
         token = self.get_header(response2, "x-csrf-token")
         return auth_sid, token
 
+    @allure.title("Delete just created user")
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_delete_my_user(self):
         email, password, user_id = self.register_new_user()
         auth_sid, token = self.login(email, password)
@@ -58,6 +62,8 @@ class TestUserDelete(BaseCase):
         )
         Assertions.assert_code_status(response2, 404)
 
+    @allure.title("Delete user id 2")
+    @allure.severity(allure.severity_level.TRIVIAL)
     def test_delete_user_2(self):
         data = {
             'email': 'vinkotov@example.com',
@@ -72,6 +78,8 @@ class TestUserDelete(BaseCase):
         Assertions.assert_code_status(response, 400)
         assert response.text == "Please, do not delete test users with ID 1, 2, 3, 4 or 5."
 
+    @allure.title("Delete another user")
+    @allure.severity(allure.severity_level.NORMAL)
     def test_delete_another_user(self):
         email, password, user_id = self.register_new_user()
         auth_sid, token = self.login(email, password)

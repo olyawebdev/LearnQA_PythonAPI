@@ -1,7 +1,9 @@
+import allure
 from lib.my_requests import MyRequests
 from lib.base_case import BaseCase
 from lib.assertions import Assertions
 
+@allure.epic("Edit user cases")
 class TestUserEdit(BaseCase):
 
     def setup(self):
@@ -38,6 +40,8 @@ class TestUserEdit(BaseCase):
         token = self.get_header(response2, "x-csrf-token")
         return auth_sid, token
 
+    @allure.title("Edit just created user")
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_edit_just_created_user(self):
 
         email, password, user_id = self.register_new_user()
@@ -68,6 +72,8 @@ class TestUserEdit(BaseCase):
             "Wrong name of the user after edit"
         )
 
+    @allure.title("Edit user without auth")
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_edit_no_auth(self):
         #EDIT
         user_id = 44692
@@ -78,6 +84,8 @@ class TestUserEdit(BaseCase):
         )
         Assertions.assert_code_status(response3, 400)
 
+    @allure.title("Edit another user")
+    @allure.severity(allure.severity_level.CRITICAL)
     def test_edit_another_user(self):
         email, password, user_id = self.register_new_user()
         auth_sid, token = self.login(email, password) #Авторизовались под только что созданным юзером
@@ -103,6 +111,8 @@ class TestUserEdit(BaseCase):
         assert firstName != new_firstName, f"First name of the user {user_id_to_edit} was changed by {user_id}. New name is {new_firstName}."
         #Assert успешно отработал, имя пользователя осталось прежним.
 
+    @allure.title("Edit user's email to invalid")
+    @allure.severity(allure.severity_level.NORMAL)
     def test_edit_user_email_invalid(self):
         email, password, user_id = self.register_new_user()
         auth_sid, token = self.login(email, password)
@@ -117,6 +127,8 @@ class TestUserEdit(BaseCase):
         assert response.content.decode("utf-8") == f"Invalid email format", \
             self.ERRORS["response.content"].format(response.content)
 
+    @allure.title("Edit user's first name to very short (one symbol)")
+    @allure.severity(allure.severity_level.TRIVIAL)
     def test_edit_user_short_firstname(self):
         email, password, user_id = self.register_new_user()
         auth_sid, token = self.login(email, password)
